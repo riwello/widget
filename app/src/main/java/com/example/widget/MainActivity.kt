@@ -7,6 +7,10 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.viewpager.widget.ViewPager
+import androidx.viewpager2.widget.ViewPager2
+import com.chad.library.adapter.base.BaseQuickAdapter
+import com.chad.library.adapter.base.viewholder.BaseViewHolder
 import com.example.widget.entiy.AddressEntity
 import com.example.widget.utils.StreamUtil
 import com.example.widget.widget.ArcView
@@ -21,15 +25,29 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val arcView= findViewById<ArcView>(R.id.arc_view)
-        val tvProgress= findViewById<TextView>(R.id.tv_progress)
+        val arcView = findViewById<ArcView>(R.id.arc_view)
+        val tvProgress = findViewById<TextView>(R.id.tv_progress)
+        val viewPager2 = findViewById<ViewPager2>(R.id.viewpager)
+        val levelArr = arrayOf("0", "1", "2", "3", "4", "5")
+        viewPager2.adapter =
+            object : BaseQuickAdapter<String, BaseViewHolder>(
+                R.layout.item_paghe,
+                levelArr.toMutableList()
+            ) {
+                override fun convert(holder: BaseViewHolder, item: String) {
+                    holder.setText(R.id.text, item)
+                }
+
+            }
+
+        arcView.bindViewPager(viewPager2)
 
         findViewById<SeekBar>(R.id.progress).apply {
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(p0: SeekBar?, progress: Int, formUser: Boolean) {
 //                    Log.d(TAG,"progress change $progress")
-                    tvProgress.setText("progress $progress  angle ${progress/100f*360f}")
-                    arcView.setAngleProgress(progress/100f)
+//                    tvProgress.setText("progress $progress  angle ${progress/100f*360f}")
+                    arcView.setAngle(progress.toFloat())
 
                 }
 
