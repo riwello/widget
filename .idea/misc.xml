@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/lwl/.gradle/caches/transforms-3/39a9c8c1393172df8bf309419c34c6bc/transformed/WheelPicker-3.1.2/res/layout/wheel_picker_linkage.xml" value="0.35280797101449274" />
+        <entry key="..\:/Users/lwl/AndroidStudioProjects/Widget/app/src/main/res/layout/activity_main.xml" value="0.34739583333333335" />
+        <entry key="..\:/Users/lwl/AndroidStudioProjects/Widget/app/src/main/res/layout/wheel_picker_linkage_4.xml" value="0.35280797101449274" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

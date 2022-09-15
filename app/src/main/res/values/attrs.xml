@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CalibrationView">
+        <!--最大进度值-->
+        <attr name="MaxProgress" format="integer"/>
+        <!--默认显示值-->
+        <attr name="DefaultShow" format="integer"/>
+        <!--是否显示动画-->
+        <attr name="ShowAnim" format="boolean"/>
+        <!--动画时是否从0开始-->
+        <attr name="ShowFromZero" format="boolean"/>
+        <!--动画的执行总时间-->
+        <attr name="AnimDuration" format="integer"/>
+        <!--弧形的背景颜色-->
+        <attr name="CalibBgColor" format="color"/>
+        <!--指针的颜色-->
+        <attr name="PointerColor" format="color"/>
+        <!--圆形刻度点的颜色-->
+        <attr name="CalibCircleColor" format="color"/>
+
+
+    </declare-styleable>
+</resources>
