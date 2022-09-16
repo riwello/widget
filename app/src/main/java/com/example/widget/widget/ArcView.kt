@@ -21,6 +21,11 @@ class ArcView : View {
         style = Paint.Style.STROKE
         strokeWidth = 5f
     }
+    private val linePaint = Paint().apply {
+        color = Color.RED
+        style = Paint.Style.STROKE
+        strokeWidth = 1f
+    }
     private val textPaint = Paint().apply {
         color = Color.BLACK
 //        style = Paint.Style.STROKE
@@ -34,7 +39,8 @@ class ArcView : View {
     private var centerCircleAngle = 90f //中间圆角度
     private var leftCircleAngle = -1f //左边圆角度
     private var rightCircleAngle = -1f//右边圆的角度
-    private var angleDivider = 60f
+    private var leftPointX = 0f//静止时 左边点的X坐标
+    private var rightPointX = 0f//静止时 右边点的X坐标
 
     //椭圆实际宽度和控件宽比值
     private val ovalWidthRatio = 1.302f
@@ -54,11 +60,6 @@ class ArcView : View {
 
     private var position = 1
 
-    inner class LevelPoint(
-        val position: Int,
-        var angle: Float
-    )
-
 
     constructor(context: Context?) : super(context)
     constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
@@ -77,8 +78,7 @@ class ArcView : View {
         val ovalHeight = height - centerCircleRadius
         val start = (width - ovalWidth) / 2
         ovalRectF = RectF(start, -ovalHeight / 2f, ovalWidth + start, ovalHeight)
-//        startAngle = getStartAngle(ovalRectF, width)
-//        endAngle = getEndAngle(ovalRectF)
+
 
         initAngle(ovalRectF, width)
         setMeasuredDimension(width, height.toInt())
@@ -86,50 +86,66 @@ class ArcView : View {
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-
+        canvas.drawText("${(progress * 100).toInt()}", width / 2f, height / 2f, textPaint)
         canvas.drawArc(ovalRectF, startAngle, endAngle - startAngle, false, paint)
-        val leftOffset = angleDivider / 1.5f * progress
+        val leftOffset = (180f - leftCircleAngle) * progress
+        val leftAngle = leftCircleAngle + leftOffset
         //左边的点
-        if (position > 0 && leftCircleAngle + leftOffset <= endAngle) {
-            getArcPoint(ovalRectF, leftCircleAngle + leftOffset).run {
+        if (position > 0) {
+            getArcPoint(ovalRectF, leftAngle).run {
                 canvas.drawCircle(
                     x, y, centerCircleRadius, paint
                 )
-                canvas.drawText(position.minus(1).toString(), x, y, textPaint)
+                canvas.drawText(
+                    "${leftAngle.toInt()} 左${position.minus(1).toString()}",
+                    x,
+                    y,
+                    textPaint
+                )
             }
         }
 
-        val centerOffset = angleDivider * progress
-        Log.d(TAG, "center offset $centerOffset  angleDivider $angleDivider progress $progress")
+        val centerOffset = (leftCircleAngle - centerCircleAngle) * progress
+        val centerAngle = centerCircleAngle + centerOffset
         //中间的点
-        getArcPoint(ovalRectF, centerCircleAngle + centerOffset).run {
+        getArcPoint(ovalRectF, centerAngle).run {
             canvas.drawCircle(x, y, centerCircleRadius, paint)
-            canvas.drawText(position.toString(), x, y, textPaint)
+            canvas.drawText("${centerAngle.toInt()} 中$position", x, y, textPaint)
         }
 
 
-        val rightOffset = angleDivider / 1.5f * progress
-        if (position < maxLevel && rightCircleAngle + centerCircleAngle >= startAngle) {
-            //右边的点
-            getArcPoint(ovalRectF, rightCircleAngle + rightOffset).run {
-                canvas.drawCircle(
-                    x, y, centerCircleRadius, paint
-                )
-                canvas.drawText(position.plus(1).toString(), x, y, textPaint)
-            }
+        val rightOffset = (centerCircleAngle - rightCircleAngle) * progress
+        val rightAngle = rightCircleAngle + rightOffset
+//        if (position < maxLevel && rightAngle>= startAngle) {
+        //右边的点
+        getArcPoint(ovalRectF, rightAngle).run {
+            canvas.drawCircle(
+                x, y, centerCircleRadius, paint
+            )
+            canvas.drawText("${rightAngle.toInt()} 右${position.plus(1)}", x, y, textPaint)
         }
-
-//        getArcPoint(ovalRectF, angle).run {
-//            canvas.drawCircle(x, y, centerCircleRadius, paint)
-//            canvas.drawText(position.toString(),x,y,textPaint)
 //        }
 
-//        (width / 2f).let { x -> canvas.drawLine(x, 0f, x, height.toFloat(), paint) }
-//        (width / 4f).let { x -> canvas.drawLine(x, 0f, x, height.toFloat(), paint) }
-//        (width * 3 / 4f).let { x -> canvas.drawLine(x, 0f, x, height.toFloat(), paint) }
+
+        //右侧外部的点
+        val outsideOffset = (rightCircleAngle - startAngle / 2f) * progress
+        val outsideAngle = startAngle / 2f + outsideOffset
+        if (outsideAngle > startAngle) {
+            getArcPoint(ovalRectF, outsideAngle).run {
+                canvas.drawCircle(
+                    x, y, centerCircleRadius, paint
+                )
+                canvas.drawText("外${outsideAngle.toInt()} ${position.plus(2)}", x, y, textPaint)
+            }
+        }
 
 
+
+        (width / 2f).let { x -> canvas.drawLine(x, 0f, x, height.toFloat(), linePaint) }
+        leftPointX.let { canvas.drawLine(x, 0f, x, height.toFloat(), linePaint) }
+        rightPointX.let { canvas.drawLine(x, 0f, x, height.toFloat(), linePaint) }
     }
+
 
     private fun getArcPoint(rectF: RectF, angle: Float): PointF {
         val a = rectF.width() / 2f
@@ -152,12 +168,12 @@ class ArcView : View {
     }
 
     private fun initAngle(rectF: RectF, width: Int) {
-        val leftCircleX = width / 4f
-        val rightCircleX = width * 3 / 4f
+        leftPointX= width * 0.2f
+        rightPointX = width - leftPointX
         var leftTemp = width.toFloat()
         var rightTemp = width.toFloat()
-        val count = 1800f
-        for (i in 0..1800) {
+        val angleRange = 1800
+        for (i in 0..angleRange) {
             val angle = i / 10f
             val point = getArcPoint(rectF, angle.toFloat())
 //            Log.d(TAG,"angle $angle  point $point")
@@ -165,27 +181,20 @@ class ArcView : View {
             if (point.x <= width && startAngle == -1f) {
                 startAngle = angle.toInt().toFloat()
             }
-            if ((point.x <= 0f && endAngle == -1f) || (i == 1800 && endAngle == -1f)) {
-
+            if ((point.x <= 0f && endAngle == -1f) || (i == angleRange && endAngle == -1f)) {
                 endAngle = ceil(angle.toDouble()).toFloat()
             }
-            leftTemp = min(abs(leftCircleX - point.x).also {
-                if (it > leftTemp && leftCircleAngle == -1f) leftCircleAngle = angle.toFloat()
+            leftTemp = min(abs(leftPointX - point.x).also {
+                if (it < leftTemp) leftCircleAngle = angle
             }, leftTemp)
-            rightTemp = min(abs(rightCircleX - point.x).also {
-                if (it > rightTemp && rightCircleAngle == -1f) rightCircleAngle = angle.toFloat()
+            rightTemp = min(abs(rightPointX - point.x).also {
+                if (it < rightTemp) rightCircleAngle = angle
             }, rightTemp)
         }
-        angleDivider = (centerCircleAngle - rightCircleAngle)
         Log.d(
             TAG,
             "width $width height $height oval $ovalRectF startAngle $startAngle endAngle $endAngle  leftCircleAngle $leftCircleAngle  rightCircleAngle$rightCircleAngle"
         )
-//        centerOffsetRangeAngle = leftCircleAngle - centerCircleAngle
-//        leftOffsetRangeAngle = endAngle - leftCircleAngle
-//        rightOffsetRangeAngle = rightCircleAngle - startAngle
-
-//        Log.d(TAG,"leftOffsetRangeAngle $leftOffsetRangeAngle  centerOffsetRangeAngle $centerOffsetRangeAngle rightOffsetRangeAngle $rightOffsetRangeAngle")
     }
 
 
@@ -225,7 +234,7 @@ class ArcView : View {
         object : ViewPager2.OnPageChangeCallback() {
             var lastOffsetPx = 0
             var state = ViewPager2.SCROLL_STATE_IDLE
-            var positiveScroll = true
+            var preState = ViewPager2.SCROLL_STATE_IDLE
 
             override fun onPageScrolled(
                 pos: Int,
@@ -249,35 +258,25 @@ class ArcView : View {
                 if (lastOffsetPx < positionOffsetPixels) {
                     //向右滑动
                     progress = posOffset
-                    position = pos
-                    Log.d(
-                        TAG,
-                        "左滑current${viewPager?.currentItem} position $pos positionOffset $posOffset  positionOffsetPixels $positionOffsetPixels"
-                    )
+
+//                    Log.d(
+//                        TAG,
+//                        "左滑current${viewPager?.currentItem} position $pos positionOffset $posOffset  positionOffsetPixels $positionOffsetPixels"
+//                    )
 
                 } else if (lastOffsetPx > positionOffsetPixels) {
-                    Log.d(
-                        TAG,
-                        "右滑current${viewPager?.currentItem} position $pos positionOffset $posOffset  positionOffsetPixels $positionOffsetPixels"
-                    )
+//                    Log.d(
+//                        TAG,
+//                        "右滑current${viewPager?.currentItem} position $pos positionOffset $posOffset  positionOffsetPixels $positionOffsetPixels"
+//                    )
                     //向左
                     progress = posOffset
-                    position = pos
-
                 } else {
-                    progress= 0f
-                    position = pos
-
+                    progress = 0f
                 }
-
-
-                //从当前页 往左滑
-//                progress= positionOffset
-
+                position = pos
                 lastOffsetPx = positionOffsetPixels
-//                prePosition= position
-//                progress = positionOffset
-//                lastOffset = positionOffsetPixels
+
                 invalidate()
             }
 
@@ -290,6 +289,9 @@ class ArcView : View {
             override fun onPageScrollStateChanged(state: Int) {
                 super.onPageScrollStateChanged(state)
                 this.state = state
+                if (preState != state) {
+                    preState
+                }
             }
         }
 
@@ -298,12 +300,7 @@ class ArcView : View {
         viewPager2.registerOnPageChangeCallback(pageChangeCallback)
         maxLevel = viewPager2.adapter?.itemCount ?: 0
         position = viewPager2.currentItem
-
-        val list = mutableListOf<LevelPoint>()
-
-//        for ( index in 0..maxLevel){
-//            list.add(LevelPoint(index,90f))
-//        }
+        invalidate()
     }
 
 
