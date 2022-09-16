@@ -17,6 +17,7 @@ import com.example.widget.widget.ArcView
 import com.github.gzuliyujiang.wheelpicker.AddressPicker
 import com.github.gzuliyujiang.wheelpicker.annotation.AddressMode
 import com.github.gzuliyujiang.wheelpicker.utility.AddressJsonParser
+import com.google.android.material.tabs.TabLayoutMediator
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
