@@ -43,25 +43,7 @@ class MainActivity : AppCompatActivity() {
 
         arcView.bindViewPager(viewPager2)
 
-        findViewById<SeekBar>(R.id.progress).apply {
-            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(p0: SeekBar?, progress: Int, formUser: Boolean) {
-//                    Log.d(TAG,"progress change $progress")
-//                    tvProgress.setText("progress $progress  angle ${progress/100f*360f}")
-                    arcView.setAngle(progress.toFloat())
 
-                }
-
-                override fun onStartTrackingTouch(p0: SeekBar?) {
-
-                }
-
-                override fun onStopTrackingTouch(p0: SeekBar?) {
-
-                }
-
-            })
-        }
 
 
     }

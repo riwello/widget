@@ -10,7 +10,7 @@ import androidx.viewpager2.widget.ViewPager2
 import kotlin.math.*
 
 class ArcView : View {
-    private var labelYOffset: Float = 0f
+
     private val TAG = "ArcView"
 
     private val arcPaint = Paint().apply {
@@ -36,16 +36,21 @@ class ArcView : View {
         textAlign = Paint.Align.CENTER
     }
 
+    //90度弧长
+    private var centerArcLength: Float = 0f
+
+    //文字Y轴偏移量
+    private var labelYOffset: Float = 0f
+
     private var startAngle = -1f //椭圆起始角度
     private var endAngle = -1f //椭圆结束角度
-    private var angle = 90f //测试用 运动圆角度
     private var centerCircleAngle = 90f //中间圆角度
     private var leftCircleAngle = -1f //左边圆角度
     private var rightCircleAngle = -1f//右边圆的角度
 
     //椭圆实际宽度和控件宽比值
-    private val ovalWidthRatio = 1.302f
-//    private val ovalWidthRatio = 1f
+//    private val ovalWidthRatio = 1.302f
+    private val ovalWidthRatio = 1f
 
     //控件高/宽
     private val aspectRatio = .314f
@@ -60,7 +65,6 @@ class ArcView : View {
 
     private var maxLevel = 6
     private var currentLevel = 3
-    private var currentLevelAngle = 90f
     private var position = 1
 
 
@@ -84,88 +88,46 @@ class ArcView : View {
 
 
         iniParams(ovalRectF, width)
+        ini(ovalRectF)
         setMeasuredDimension(width, height.toInt())
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawText("${(progress * 100).toInt()}", width / 2f, height / 2f, textPaint)
-        arcPaint.apply {
-            color = Color.parseColor("#38E5FF")
-            alpha = 255
-        }
-        canvas.drawArc(ovalRectF, currentLevelAngle, endAngle - currentLevelAngle, false, arcPaint)
-        arcPaint.apply {
+        canvas.drawText(
+            "progress ${(progress * 100).toInt()} positoin $position",
+            width / 2f,
+            height / 2f,
+            textPaint
+        )
+        val arcLocation = locationPosition()
+
+        val currentLevelAngle = arcLocation.secondArcPoint.angle
+        val angleByArcPoint = getAngleByArcPoint(arcLocation.secondArcPoint)
+//        Log.e(TAG, "currentLevelAngle $currentLevelAngle $position")
+        canvas.drawArc(
+            ovalRectF,
+            currentLevelAngle,
+            180f - currentLevelAngle,
+            false,
+            arcPaint.apply {
+                color = Color.parseColor("#38E5FF")
+                alpha = 255
+            })
+        canvas.drawArc(ovalRectF, 0f, currentLevelAngle, false, arcPaint.apply {
             color = Color.parseColor("#000000")
             alpha = 38
-        }
-
-        canvas.drawArc(ovalRectF, 0f, currentLevelAngle, false, arcPaint)
+        })
 
 
-        val leftOffset = (180f - leftCircleAngle) * progress
-        val leftAngle = leftCircleAngle + leftOffset
-        //左边的点
-        if (position > 0) {
-            getArcPoint(ovalRectF, leftAngle).run {
-                canvas.drawCircle(
-                    x, y, centerCircleRadius, highlightCirclePaint
-                )
-                canvas.drawText(
-                    "${leftAngle.toInt()} 左${position.minus(1).toString()}",
-                    x,
-                    y + labelYOffset,
-                    textPaint
-                )
-            }
-        }
+        drawCirclePoint(canvas, arcLocation.firstArcPoint.angle, position - 1, "fir")
+        drawCirclePoint(canvas, arcLocation.secondArcPoint.angle, position, "sec")
+        drawCirclePoint(canvas, arcLocation.thirdArcPoint.angle, position + 1, "thir")
+        drawCirclePoint(canvas, arcLocation.fourthArcPoint.angle, position + 2, "four")
 
-        val centerOffset = (leftCircleAngle - centerCircleAngle) * progress
-        val centerAngle = centerCircleAngle + centerOffset
-        //中间的点
-        getArcPoint(ovalRectF, centerAngle).run {
-            canvas.drawCircle(x, y, centerCircleRadius, highlightCirclePaint)
-            canvas.drawText("${centerAngle.toInt()} 中$position", x, y + labelYOffset, textPaint)
-        }
-
-
-        val rightOffset = (centerCircleAngle - rightCircleAngle) * progress
-        val rightAngle = rightCircleAngle + rightOffset
-//        if (position < maxLevel && rightAngle>= startAngle) {
-        //右边的点
-        getArcPoint(ovalRectF, rightAngle).run {
-            canvas.drawCircle(
-                x, y, centerCircleRadius, highlightCirclePaint
-            )
-            canvas.drawText(
-                "${rightAngle.toInt()} 右${position.plus(1)}",
-                x,
-                y + labelYOffset,
-                textPaint
-            )
-        }
-//        }
-
-
-        //右侧外部的点
-        val outsideOffset = (rightCircleAngle - startAngle / 2f) * progress
-        val outsideAngle = startAngle / 2f + outsideOffset
-        if (outsideAngle > startAngle) {
-            getArcPoint(ovalRectF, outsideAngle).run {
-                canvas.drawCircle(
-                    x, y, centerCircleRadius, highlightCirclePaint
-                )
-                canvas.drawText(
-                    "外${outsideAngle.toInt()} ${position.plus(2)}",
-                    x,
-                    y + labelYOffset,
-                    textPaint
-                )
-            }
-        }
 
         (width / 2f).let { x -> canvas.drawLine(x, 0f, x, height.toFloat(), linePaint) }
-        getArcPoint(ovalRectF, leftCircleAngle).run {
+        getArcPoint(ovalRectF, 45f).run {
             canvas.drawLine(
                 x,
                 0f,
@@ -174,7 +136,7 @@ class ArcView : View {
                 linePaint
             )
         }
-        getArcPoint(ovalRectF, rightCircleAngle).run {
+        getArcPoint(ovalRectF, 135f).run {
             canvas.drawLine(
                 x,
                 0f,
@@ -182,6 +144,119 @@ class ArcView : View {
                 height.toFloat(),
                 linePaint
             )
+        }
+//        getArcPoint(ovalRectF, arcLocation.thirdArcPoint.angle).run {
+//            canvas.drawLine(
+//                x,
+//                0f,
+//                x,
+//                height.toFloat(),
+//                linePaint
+//            )
+//        }
+    }
+
+    private fun getAngleByArcPoint(pointEnd: ArcPoint): Float {
+        val pointStart = PointF(ovalRectF.right, ovalRectF.centerY())
+        val oPoint = PointF(ovalRectF.centerX(), ovalRectF.centerY())
+        val angle = getAngle(oPoint, pointStart, pointEnd.point)
+        Log.e(
+            TAG,
+            "pointStart ${pointStart}  oPoint ${oPoint} pointEnd ${pointEnd.point}  secondArcPointAngle ${pointEnd.angle}  getAngle $angle"
+        )
+        return angle
+    }
+
+    fun getAngle(pointA: PointF, pointB: PointF, pointC: PointF): Float {
+        val lengthAB = sqrt(
+            (pointA.x - pointB.x).pow(2.0f) +
+                    (pointA.y - pointB.y).pow(2f)
+        )
+        val lengthAC = sqrt(
+            (pointA.x - pointC.x).pow(2.0f) +
+                    (pointA.y - pointC.y).pow(2.0f)
+        )
+        val lengthBC = sqrt(
+            (pointB.x - pointC.x).pow(2.0f) +
+                    (pointB.y - pointC.y).pow(2.0f)
+        )
+        val cosA = (lengthAB.pow(2.0f) + lengthAC.pow(2.0f) - lengthBC.pow(2.0f)) /
+                (2 * lengthAB * lengthAC)
+        return (acos(cosA) * 180 / Math.PI).toFloat()
+    }
+
+    class ArcLocation(
+        var firstArcPoint: ArcPoint,
+        var secondArcPoint: ArcPoint,
+        var thirdArcPoint: ArcPoint,
+        var fourthArcPoint: ArcPoint
+    )
+
+    class ArcPoint(
+        val point: PointF = PointF(),
+        val angle: Float = 0f,
+    )
+
+
+    /**
+     *
+     */
+    private fun locationPosition(): ArcLocation {
+        var firstPoint: ArcPoint? = null
+        var secondPoint: ArcPoint? = null
+        var thirdPoint: ArcPoint? = null
+        var fourthPoint: ArcPoint? = null
+        //画各个圆点
+        var x0 = ovalRectF.right
+        var y0 = ovalRectF.centerY()
+        var angle = 0f
+        var d = 0f
+        val offset = centerArcLength / 2f * progress
+        while (angle <= 180f) {
+            val point = getArcPoint(ovalRectF, angle)
+            d += distance(x0, y0, point.x, point.y)
+            x0 = point.x
+            y0 = point.y
+            if (firstPoint == null && d >= centerArcLength * 1.5f + offset) {
+                firstPoint = ArcPoint(getArcPoint(ovalRectF, angle), angle)
+            } else if (secondPoint == null && d >= centerArcLength + offset) {
+                secondPoint = ArcPoint(getArcPoint(ovalRectF, angle), angle)
+            } else if (thirdPoint == null && d >= centerArcLength * 0.5f + offset) {
+                thirdPoint = ArcPoint(getArcPoint(ovalRectF, angle), angle)
+            } else if (fourthPoint == null && d > 0 + offset) {
+                fourthPoint = ArcPoint(getArcPoint(ovalRectF, angle), angle)
+            }
+            angle += 0.25f
+        }
+        return ArcLocation(
+            firstPoint ?: ArcPoint(),
+            secondPoint ?: ArcPoint(),
+            thirdPoint ?: ArcPoint(),
+            fourthPoint ?: ArcPoint()
+        )
+    }
+
+
+    private fun drawCirclePoint(canvas: Canvas, angle: Float, position: Int, desc: String = "") {
+        if (position in 0 until maxLevel) {
+            getArcPoint(ovalRectF, angle).run {
+                canvas.drawCircle(x, y, centerCircleRadius, highlightCirclePaint)
+                canvas.drawText("${angle.toInt()} $position $desc", x, y + labelYOffset, textPaint)
+            }
+        }
+    }
+
+    private fun drawCirclePoint(
+        canvas: Canvas,
+        arcPoint: ArcPoint,
+        position: Int,
+        desc: String = ""
+    ) {
+        if (position in 0 until maxLevel) {
+            arcPoint.point.run {
+                canvas.drawCircle(x, y, centerCircleRadius, highlightCirclePaint)
+                canvas.drawText("Lv.$position $desc", x, y + labelYOffset, textPaint)
+            }
         }
     }
 
@@ -204,6 +279,32 @@ class ArcView : View {
         val y = rectF.top + b + ay
 
         return PointF(x.toFloat(), y.toFloat())
+    }
+
+    private fun distance(x1: Float, y1: Float, x2: Float, y2: Float): Float {
+        return sqrt((x2 - x1).pow(2) + (y2 - y1).pow(2))
+
+    }
+
+    private fun ini(rectF: RectF) {
+        centerArcLength = getCircumference(rectF, 90f)
+        Log.e(TAG, "Circumference of ellipse = centerArcLength $centerArcLength ")
+
+    }
+
+    private fun getCircumference(rectF: RectF, limitAngle: Float): Float {
+        var x0 = ovalRectF.right
+        var y0 = ovalRectF.centerY()
+        var angle = 0f
+        var d = 0f
+        while (angle <= limitAngle) {
+            val point = getArcPoint(rectF, angle)
+            d += distance(x0, y0, point.x, point.y)
+            x0 = point.x
+            y0 = point.y
+            angle += 0.25f
+        }
+        return d
     }
 
     /**
@@ -254,18 +355,6 @@ class ArcView : View {
                 .let { bounds.height() }
 
     }
-
-
-    fun setAngleProgress(progress: Float) {
-        angle = 360f * progress
-        invalidate()
-    }
-
-    fun setAngle(angle: Float) {
-        this.angle = angle
-        invalidate()
-    }
-
 
     private var viewPager: ViewPager2? = null
     private var pageChangeCallback: ViewPager2.OnPageChangeCallback =

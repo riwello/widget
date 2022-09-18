@@ -4,9 +4,9 @@ import android.graphics.PointF
 import android.graphics.RectF
 import kotlin.math.*
 
-class formulaUtils {
+object FormulaUtils {
 
-    private fun getArcPoint(rectF: RectF, angle: Float): PointF {
+     fun getArcPoint(rectF: RectF, angle: Float): PointF {
         val a = rectF.width() / 2f
         val b = rectF.height() / 2f
 
@@ -31,7 +31,7 @@ class formulaUtils {
      * @param a 长轴
      * @param b 短轴
      */
-    private fun eccentricAngle(a: Float, b: Float, radians: Float): Float {
+     fun eccentricAngle(a: Float, b: Float, radians: Float): Float {
         return atan2(a * sin(radians), b * cos(radians))
     }
 
