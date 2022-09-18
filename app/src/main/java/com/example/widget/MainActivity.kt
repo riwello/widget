@@ -27,7 +27,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val arcView = findViewById<ArcView>(R.id.arc_view)
-        val tvProgress = findViewById<TextView>(R.id.tv_progress)
         val viewPager2 = findViewById<ViewPager2>(R.id.viewpager)
         val levelArr = arrayOf("0", "1", "2", "3", "4", "5")
         viewPager2.adapter =
