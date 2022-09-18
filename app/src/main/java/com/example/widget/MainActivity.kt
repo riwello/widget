@@ -4,20 +4,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.ProgressBar
-import android.widget.SeekBar
-import android.widget.TextView
-import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.widget.ViewPager2
 import com.chad.library.adapter.base.BaseQuickAdapter
 import com.chad.library.adapter.base.viewholder.BaseViewHolder
 import com.example.widget.entiy.AddressEntity
 import com.example.widget.utils.StreamUtil
-import com.example.widget.widget.ArcView
-import com.github.gzuliyujiang.wheelpicker.AddressPicker
-import com.github.gzuliyujiang.wheelpicker.annotation.AddressMode
-import com.github.gzuliyujiang.wheelpicker.utility.AddressJsonParser
-import com.google.android.material.tabs.TabLayoutMediator
+import com.example.widget.widget.OvalArcLevelView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -26,7 +18,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val arcView = findViewById<ArcView>(R.id.arc_view)
+        val ovalArcLevelView = findViewById<OvalArcLevelView>(R.id.arc_view)
         val viewPager2 = findViewById<ViewPager2>(R.id.viewpager)
         val levelArr = arrayOf("0", "1", "2", "3", "4", "5")
         viewPager2.adapter =
@@ -40,7 +32,7 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-        arcView.bindViewPager(viewPager2)
+        ovalArcLevelView.bindViewPager(viewPager2)
 
         viewPager2.setCurrentItem(2)
 

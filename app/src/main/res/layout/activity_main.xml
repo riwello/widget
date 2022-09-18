@@ -8,7 +8,7 @@
 
 
 
-    <com.example.widget.widget.ArcView
+    <com.example.widget.widget.OvalArcLevelView
         android:id="@+id/arc_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -4,13 +4,11 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import androidx.viewpager2.widget.ViewPager2
-import com.example.widget.utils.FormulaUtils
 import kotlin.math.*
 
-class ArcView : View {
+class OvalArcLevelView : View {
 
     private val TAG = "ArcView"
 
@@ -138,7 +136,6 @@ class ArcView : View {
         drawCirclePoint(canvas, arcLocation.thirdArcPoint)
         drawCirclePoint(canvas, arcLocation.fourthArcPoint)
 
-        (width / 2f).let { x -> canvas.drawLine(x, 0f, x, height.toFloat(), linePaint) }
 
     }
 
@@ -231,14 +228,6 @@ class ArcView : View {
                         color = Color.GRAY
                     })
                 }
-                val textTextBounds = getTextTextBounds("Lv.$position")
-                canvas.drawLine(
-                    point.x - textTextBounds.width(),
-                    point.y + textTextBounds.height(),
-                    point.x + textTextBounds.width(),
-                    point.y + textTextBounds.height(),
-                    linePaint
-                )
                 canvas.save()
                 canvas.translate(point.x, point.y)
                 canvas.rotate( (eccentricAngle(angle)-90f)/2f)
