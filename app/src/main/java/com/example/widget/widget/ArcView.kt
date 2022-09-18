@@ -72,7 +72,7 @@ class ArcView : View {
     private var highlightCirclePosition = 2
 
     //viewpager 滑动过程中的 position 位于中间的点的position值
-    private var currentPosition = 1
+    private var currentPosition = 0
 
 
     constructor(context: Context?) : super(context)
@@ -143,42 +143,6 @@ class ArcView : View {
     }
 
 
-    /**
-     * 根据圆心角 计算离心角
-     * @param a 长轴
-     * @param b 短轴
-     * @param centralAngle 圆心角 角度
-     * @return
-     */
-    private fun eccentricAngle(centralAngle: Float): Float {
-        val a = ovalRectF.width() / 2f
-        val b = ovalRectF.height() / 2f
-        // 转弧度
-        val centralRadians = Math.toRadians(centralAngle.toDouble())
-        //离心角弧度
-        val centrifugalRadians = atan2(a * sin(centralRadians), b * cos(centralRadians))
-        //转离心角 角度
-        return Math.toDegrees(centrifugalRadians).toFloat()
-    }
-
-
-    class ArcLocation(
-        var firstArcPoint: ArcPoint,
-        var secondArcPoint: ArcPoint,
-        var thirdArcPoint: ArcPoint,
-        var fourthArcPoint: ArcPoint,
-        var highlightPoint: ArcPoint
-
-    )
-
-    class ArcPoint(
-        //圆弧上的坐标
-        val point: PointF = PointF(),
-        //角度
-        val angle: Float = 0f,
-        // 第几个点
-        val position: Int = -1
-    )
 
 
     /**
@@ -267,10 +231,61 @@ class ArcView : View {
                         color = Color.GRAY
                     })
                 }
-                canvas.drawText("Lv.$position", point.x, point.y + labelYOffset, textPaint)
+                val textTextBounds = getTextTextBounds("Lv.$position")
+                canvas.drawLine(
+                    point.x - textTextBounds.width(),
+                    point.y + textTextBounds.height(),
+                    point.x + textTextBounds.width(),
+                    point.y + textTextBounds.height(),
+                    linePaint
+                )
+                canvas.save()
+                canvas.translate(point.x, point.y)
+                canvas.rotate( (eccentricAngle(angle)-90f)/2f)
+                canvas.drawText("Lv.$position", 0f, 0f + labelYOffset, textPaint)
+                canvas.restore()
             }
         }
     }
+
+
+
+    /**
+     * 根据圆心角 计算离心角
+     * @param a 长轴
+     * @param b 短轴
+     * @param angle 圆心角 角度
+     * @return
+     */
+    private fun eccentricAngle(angle: Float): Float {
+        val a = ovalRectF.width() / 2f
+        val b = ovalRectF.height() / 2f
+        // 转弧度
+        val centralRadians = Math.toRadians(angle.toDouble())
+        //离心角弧度
+        val centrifugalRadians = atan2(a * sin(centralRadians), b * cos(centralRadians))
+        //转离心角 角度
+        return Math.toDegrees(centrifugalRadians).toFloat()
+    }
+
+
+    class ArcLocation(
+        var firstArcPoint: ArcPoint,
+        var secondArcPoint: ArcPoint,
+        var thirdArcPoint: ArcPoint,
+        var fourthArcPoint: ArcPoint,
+        var highlightPoint: ArcPoint
+
+    )
+
+    class ArcPoint(
+        //圆弧上的坐标
+        val point: PointF = PointF(),
+        //角度
+        val angle: Float = 0f,
+        // 第几个点
+        val position: Int = -1
+    )
 
 
     /**
@@ -296,11 +311,11 @@ class ArcView : View {
     }
 
 
-    private fun ini(rectF: RectF) {
 
 
-    }
-
+    /**
+     * 根据角度获取弧长
+     */
     private fun getCircumference(rectF: RectF, limitAngle: Float): Float {
         var x0 = ovalRectF.right
         var y0 = ovalRectF.centerY()
@@ -320,49 +335,24 @@ class ArcView : View {
     private var pageChangeCallback: ViewPager2.OnPageChangeCallback =
         object : ViewPager2.OnPageChangeCallback() {
             var lastOffsetPx = 0
-            var state = ViewPager2.SCROLL_STATE_IDLE
-            var preState = ViewPager2.SCROLL_STATE_IDLE
-
             override fun onPageScrolled(
                 pos: Int,
                 posOffset: Float,
                 positionOffsetPixels: Int
             ) {
                 super.onPageScrolled(pos, posOffset, positionOffsetPixels)
-                /**
-                 * center :
-                 * progress 0->1
-                 * angle 90-> leftAngle
-                 *
-                 */
-
-                if (lastOffsetPx < positionOffsetPixels) {
-                    //向右滑动
-                    progress = posOffset
-                } else if (lastOffsetPx > positionOffsetPixels) {
-                    //向左
-                    progress = posOffset
-                } else {
-                    progress = 0f
-                }
+                progress = posOffset
                 currentPosition = pos
                 lastOffsetPx = positionOffsetPixels
-
                 invalidate()
             }
 
             override fun onPageSelected(pos: Int) {
                 super.onPageSelected(currentPosition)
-
-                Log.d(TAG, "==============PageSelect  ============ $currentPosition")
             }
 
             override fun onPageScrollStateChanged(state: Int) {
                 super.onPageScrollStateChanged(state)
-                this.state = state
-                if (preState != state) {
-                    preState
-                }
             }
         }
 

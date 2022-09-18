@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         arcView.bindViewPager(viewPager2)
 
-
+        viewPager2.setCurrentItem(2)
 
 
     }
