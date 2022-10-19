@@ -15,18 +15,19 @@ class AnimationActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(viewBind.root)
         viewBind.lotteryDrawView.apply {
-            addChildViews(listOf(
-                createChildView(),
-                createChildView(),
-                createChildView(),
-                createChildView(),
-                createChildView(),
-                createChildView(),
-            ))
+
             setOnClickListener {
                 reset()
             }
         }
+        viewBind.pool.addChildViews(listOf(
+            createChildView(),
+            createChildView(),
+            createChildView(),
+            createChildView(),
+            createChildView(),
+            createChildView(),
+        ))
         viewBind.btnRoll.setOnClickListener {
             viewBind.lotteryDrawView.startRoll()
         }
