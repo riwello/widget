@@ -4,23 +4,39 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import kotlin.math.*
 
 class OvalArcLevelView : View {
 
+
     private val TAG = "ArcView"
 
     private val arcPaint = Paint().apply {
         color = Color.parseColor("#9CACFF")
+        alpha = 200
         style = Paint.Style.STROKE
         strokeWidth = 3.toPx().toFloat()
     }
 
+    private val arcNormalPaint = Paint().apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 3.toPx().toFloat()
+        color = Color.parseColor("#FFFFFF")
+        alpha = 38
+    }
+
+    private lateinit var arcShader: SweepGradient
+    private val arcShaderMatrix = Matrix()
+
     private val circlePaint = Paint().apply {
         color = Color.BLUE
         style = Paint.Style.FILL
+//        shader= LinearGradient(2,4,6,4,)
     }
 
     private val circleBorderPaint = Paint().apply {
@@ -28,15 +44,10 @@ class OvalArcLevelView : View {
         style = Paint.Style.FILL
     }
 
-    private val linePaint = Paint().apply {
-        color = Color.RED
-        style = Paint.Style.STROKE
-        strokeWidth = 1f
-    }
     private val textPaint = Paint().apply {
-        color = Color.BLACK
+        color = Color.WHITE
 //        style = Paint.Style.STROKE
-        textSize = 15.toPx().toFloat()
+        textSize = 12.toPx().toFloat()
         textAlign = Paint.Align.CENTER
     }
 
@@ -47,18 +58,30 @@ class OvalArcLevelView : View {
     private var labelYOffset: Float = 0f
 
     //椭圆实际宽度和控件宽比值
-    private val ovalWidthRatio = 1.302f
+    private val ovalWidthRatio = 1.202f
 //    private val ovalWidthRatio = 1f
 
     //控件高/宽
     private val aspectRatio = .314f
 
-    //中间圆的半径
-    private val centerCircleRadius = 4.toPx().toFloat()
-    private val circleBorderRadius = 8.toPx().toFloat()
+    //高亮点的半径
+    private val highlightCircleRadius = 4.toPx().toFloat()
+
+    //高亮点边框半径
+    private val highlightCircleBorderRadius = 8.toPx().toFloat()
+
+    //其他点的半径
+    private val normalCircleRadius = 3.toPx().toFloat()
 
     //椭圆所在的矩形
-    private lateinit var ovalRectF: RectF
+    private val ovalRectF = RectF()
+
+
+    //椭圆长轴
+    private var ovalA: Float = 0f
+
+    //椭圆短轴
+    private var ovalB: Float = 0f
 
     //viewpager 滚动 progress
     private var progress: Float = 0f
@@ -86,17 +109,29 @@ class OvalArcLevelView : View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         val width = MeasureSpec.getSize(widthMeasureSpec)
         val height = width * aspectRatio
+        setMeasuredDimension(width, height.toInt())
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
         val ovalWidth = width * ovalWidthRatio
-        val ovalHeight = height - centerCircleRadius * 2 - labelYOffset
+        labelYOffset = highlightCircleBorderRadius + getTextTextBounds("Lv.1").let { it.height() }
+        val ovalHeight = height - highlightCircleBorderRadius * 2 - labelYOffset
         val start = (width - ovalWidth) / 2
-        ovalRectF = RectF(start, -ovalHeight / 2f, ovalWidth + start, ovalHeight)
+        ovalRectF.set(start, -ovalHeight / 2f, ovalWidth + start, ovalHeight)
 
-
+        ovalA = ovalRectF.width() / 2f
+        ovalB = ovalRectF.height() / 2f
+        arcShader = SweepGradient(
+            ovalRectF.centerX(),
+            ovalRectF.centerY(),
+            Color.parseColor("#6F87FF"),
+            Color.parseColor("#38E5FF")
+        ).apply {
+            setLocalMatrix(arcShaderMatrix)
+        }
         centerArcLength = getCircumference(ovalRectF, 90f)
 
-        labelYOffset = centerCircleRadius + getTextTextBounds("Lv.1").let { it.height() }
-
-        setMeasuredDimension(width, height.toInt())
     }
 
     private fun getTextTextBounds(text: String): Rect {
@@ -107,28 +142,34 @@ class OvalArcLevelView : View {
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawText(
-            "progress ${(progress * 100).toInt()} positoin $currentPosition",
-            width / 2f,
-            height / 2f,
-            textPaint
-        )
+//        canvas.drawText(
+//            "progress ${(progress * 100).toInt()} positoin $currentPosition",
+//            width / 2f,
+//            height / 2f,
+//            textPaint
+//        )
+
+
         val arcLocation = locationPosition()
         val eccentricAngle = eccentricAngle(arcLocation.highlightPoint.angle)
+
+        arcShaderMatrix.setRotate(
+            arcLocation.highlightPoint.angle,
+            ovalRectF.centerX(),
+            ovalRectF.centerY()
+        )
         canvas.drawArc(
             ovalRectF,
             eccentricAngle,
             180f - eccentricAngle,
             false,
             arcPaint.apply {
-                color = Color.parseColor("#38E5FF")
-                alpha = 255
+                shader = arcShader.apply {
+                    setLocalMatrix(arcShaderMatrix)
+                }
             })
 //        Log.d(TAG,"currentLevelArcPoint ${arcLocation.currentLevelArcPoint.angle}  eccentricAngle $eccentricAngle   sweepAngle ${180f - eccentricAngle}")
-        canvas.drawArc(ovalRectF, 0f, eccentricAngle, false, arcPaint.apply {
-            color = Color.parseColor("#000000")
-            alpha = 38
-        })
+        canvas.drawArc(ovalRectF, 0f, eccentricAngle, false, arcNormalPaint)
 
 
         drawCirclePoint(canvas, arcLocation.firstArcPoint)
@@ -138,8 +179,6 @@ class OvalArcLevelView : View {
 
 
     }
-
-
 
 
     /**
@@ -214,29 +253,44 @@ class OvalArcLevelView : View {
                     canvas.drawCircle(
                         point.x,
                         point.y,
-                        circleBorderRadius,
+                        highlightCircleBorderRadius,
                         circleBorderPaint.apply {
-                            color = Color.LTGRAY
+                            color = Color.parseColor("#9CACFF")
+                            alpha = 127
                         })
 
-                    canvas.drawCircle(point.x, point.y, centerCircleRadius, circlePaint.apply {
-                        color = Color.BLUE
+                    canvas.drawCircle(point.x, point.y, highlightCircleRadius, circlePaint.apply {
+                        color = Color.parseColor("#9CACFF")
                     })
 
                 } else {
-                    canvas.drawCircle(point.x, point.y, centerCircleRadius, circlePaint.apply {
-                        color = Color.GRAY
-                    })
+                    if (position>highlightCirclePosition){
+                        canvas.drawCircle(point.x, point.y, normalCircleRadius, circlePaint.apply {
+                            color = Color.parseColor("#606060")
+                            alpha = 255
+                        })
+                    }else
+                        canvas.drawCircle(point.x, point.y, normalCircleRadius, circlePaint.apply {
+                            color = Color.parseColor("#9CACFF")
+                            alpha = 191
+                        })
                 }
                 canvas.save()
+                // TODO: 这里稍微有点偏移, 需要短轴+y轴偏移 画更大的椭圆的x,y轴
                 canvas.translate(point.x, point.y)
-                canvas.rotate( (eccentricAngle(angle)-90f)/2f)
-                canvas.drawText("Lv.$position", 0f, 0f + labelYOffset, textPaint)
+                canvas.rotate((eccentricAngle(angle) - 90f) / 2f)
+                canvas.drawText("V${position + 1}", 0f, 0f + labelYOffset, textPaint.apply {
+                    if (position == highlightCirclePosition) {
+                        color = Color.WHITE
+                    } else {
+                        color = Color.parseColor("#C4C4C4")
+                    }
+
+                })
                 canvas.restore()
             }
         }
     }
-
 
 
     /**
@@ -258,7 +312,7 @@ class OvalArcLevelView : View {
     }
 
 
-    class ArcLocation(
+    private class ArcLocation(
         var firstArcPoint: ArcPoint,
         var secondArcPoint: ArcPoint,
         var thirdArcPoint: ArcPoint,
@@ -267,7 +321,7 @@ class OvalArcLevelView : View {
 
     )
 
-    class ArcPoint(
+    private class ArcPoint(
         //圆弧上的坐标
         val point: PointF = PointF(),
         //角度
@@ -300,8 +354,6 @@ class OvalArcLevelView : View {
     }
 
 
-
-
     /**
      * 根据角度获取弧长
      */
@@ -321,7 +373,7 @@ class OvalArcLevelView : View {
     }
 
     private var viewPager: ViewPager2? = null
-    private var pageChangeCallback: ViewPager2.OnPageChangeCallback =
+    private val pageChangeCallback: ViewPager2.OnPageChangeCallback =
         object : ViewPager2.OnPageChangeCallback() {
             var lastOffsetPx = 0
             override fun onPageScrolled(
@@ -345,9 +397,70 @@ class OvalArcLevelView : View {
             }
         }
 
+
+    private val gestureDetector = GestureDetector(context, object :
+        GestureDetector.SimpleOnGestureListener() {
+        override fun onDown(e: MotionEvent?): Boolean {
+            parent.requestDisallowInterceptTouchEvent(true)
+            viewPager?.beginFakeDrag()
+            return true
+        }
+
+        override fun onScroll(
+            e1: MotionEvent?,
+            e2: MotionEvent?,
+            distanceX: Float,
+            distanceY: Float
+        ): Boolean {
+            viewPager?.fakeDragBy(-distanceX)
+            return true
+        }
+
+
+        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+            return onClickPoint(e.x, e.y)
+
+        }
+    })
+
+    private fun onClickPoint(x: Float, y: Float): Boolean {
+        if (x < width / 4f) {
+            viewPager?.let {
+                it.currentItem = it.currentItem - 1
+            }
+            return true
+        } else if (x >= (width * 3 / 4f)) {
+            viewPager?.let {
+                it.currentItem = it.currentItem + 1
+            }
+            return true
+        }
+        return false
+    }
+
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+//        //父view不要拦截Move事件
+//        if (event.action == MotionEvent.ACTION_MOVE) {
+//        }
+        if (!gestureDetector.onTouchEvent(event) && event.action == MotionEvent.ACTION_UP) {
+            viewPager?.endFakeDrag()
+        }
+        return true
+    }
+
+
+    private val dataChangeObserver = object : RecyclerView.AdapterDataObserver() {
+        override fun onChanged() {
+            maxCircleCount = viewPager?.adapter?.itemCount ?: 0
+            currentPosition = viewPager?.currentItem ?: 0
+        }
+    }
+
     fun bindViewPager(viewPager2: ViewPager2) {
         this.viewPager = viewPager2
         viewPager2.registerOnPageChangeCallback(pageChangeCallback)
+        viewPager2.adapter?.registerAdapterDataObserver(dataChangeObserver)
         maxCircleCount = viewPager2.adapter?.itemCount ?: 0
         currentPosition = viewPager2.currentItem
         invalidate()
@@ -356,7 +469,17 @@ class OvalArcLevelView : View {
 
     fun unbindViewPager() {
         viewPager?.unregisterOnPageChangeCallback(pageChangeCallback)
+        viewPager?.adapter?.unregisterAdapterDataObserver(dataChangeObserver)
         viewPager = null
+    }
+
+    /**
+     * 设置当前高亮的点
+     *从0开始算
+     */
+    fun setHighlightPosition(position: Int) {
+        highlightCirclePosition = position
+        invalidate()
     }
 
     private fun Int.toPx(): Int = (this * Resources.getSystem().displayMetrics.density).toInt()
