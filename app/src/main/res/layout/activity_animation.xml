@@ -1,13 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <com.example.widget.widget.LotteryDrawView
+    <com.example.widget.widget.LotteryLayout
         android:id="@+id/lottery_draw_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#ffffff" />
+        android:background="#ffffff" >
+        <ImageView
+            android:src="#ff0"
+            android:tag="bg"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+        <ImageView
+            android:elevation="1dp"
+            android:layout_marginLeft="50dp"
+            android:layout_marginBottom="50dp"
+            android:src="@mipmap/ic_launcher"
+            android:layout_gravity="bottom"
+            android:id="@+id/export"
+            android:tag="export"
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </com.example.widget.widget.LotteryLayout>
 
     <Button
         android:id="@+id/btn_roll"
