@@ -17,17 +17,19 @@ class AnimationActivity: AppCompatActivity() {
         viewBind.lotteryDrawView.apply {
 
             setOnClickListener {
-                reset()
+//                reset()
             }
         }
-        viewBind.pool.addChildViews(listOf(
+        viewBind.pool.addChildViews(
+            arrayListOf(
             createChildView(),
             createChildView(),
             createChildView(),
             createChildView(),
             createChildView(),
             createChildView(),
-        ))
+        )
+        )
         viewBind.btnRoll.setOnClickListener {
             viewBind.lotteryDrawView.startRoll()
         }

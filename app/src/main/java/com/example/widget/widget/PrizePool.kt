@@ -18,17 +18,19 @@ class PrizePool:FrameLayout {
         attrs,
         defStyleAttr
     )
-    private val lotteryPoolRect= Rect()
-    private var childViews = listOf<ViewGroup>()
+
+    private val lotteryPoolRect = Rect()
+    private var childViews = arrayListOf<ViewGroup>()
     private val pathMeasureList = ArrayList<PathMeasure>()
+
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         lotteryPoolRect.set(0, 0, w, h)
-        initBallRandomPositon()
+        initBallRandomPositon(true)
     }
 
-   private fun initPath(view: View): PathMeasure {
+    private fun initPath(view: View): PathMeasure {
         val width = view.measuredWidth
         val height = view.measuredHeight
         val x = view.x
@@ -36,10 +38,10 @@ class PrizePool:FrameLayout {
         val path = Path()
         //path移动到view位置
         path.moveTo(x, y)
-       var direction= Random.nextInt(1, 4)
-       for (i in 0..3) {
-           direction = lineToBorderLimit(path, width, height,direction)
-       }
+        var direction = Random.nextInt(1, 4)
+        for (i in 0..3) {
+            direction = lineToBorderLimit(path, width, height, direction)
+        }
         lineToEndLimit(path, width, height)
         return PathMeasure(path, false)
     }
@@ -47,16 +49,16 @@ class PrizePool:FrameLayout {
     private fun lineToEndLimit(path: Path, width: Int, height: Int) {
         path.lineTo(
             Random.nextInt(
-                lotteryPoolRect. left,
+                lotteryPoolRect.left,
                 lotteryPoolRect.right - height
             ).toFloat(), (lotteryPoolRect.bottom - height).toFloat()
         )
     }
 
-    private fun lineToBorderLimit(path: Path, width: Int, height: Int,lastDirection:Int): Int {
-        var direction=  Random.nextInt(1, 4)
-        while (direction==lastDirection){
-            direction=  Random.nextInt(1, 4)
+    private fun lineToBorderLimit(path: Path, width: Int, height: Int, lastDirection: Int): Int {
+        var direction = Random.nextInt(1, 4)
+        while (direction == lastDirection) {
+            direction = Random.nextInt(1, 4)
         }
         when (direction) {
             LotteryLayout.DIRECTION_TOP -> {
@@ -67,6 +69,7 @@ class PrizePool:FrameLayout {
                     ).toFloat(), lotteryPoolRect.top.toFloat()
                 )
             }
+
             LotteryLayout.DIRECTION_BOTTOM -> {
                 path.lineTo(
                     Random.nextInt(
@@ -75,12 +78,14 @@ class PrizePool:FrameLayout {
                     ).toFloat(), (lotteryPoolRect.bottom - height).toFloat()
                 )
             }
+
             LotteryLayout.DIRECTION_LEFT -> {
                 path.lineTo(
                     lotteryPoolRect.left.toFloat(),
                     Random.nextInt(lotteryPoolRect.top, lotteryPoolRect.bottom - height).toFloat()
                 )
             }
+
             LotteryLayout.DIRECTION_RIGHT -> {
                 path.lineTo(
                     (lotteryPoolRect.right - width).toFloat(),
@@ -92,23 +97,29 @@ class PrizePool:FrameLayout {
     }
 
 
-     fun initBallRandomPositon() {
+    fun initBallRandomPositon(bottom: Boolean) {
         pathMeasureList.clear()
         childViews.forEach {
             it.translationX = 0f
             it.translationY = 0f
             val haftWidth = it.measuredWidth / 2
             val haftHeight = it.measuredHeight / 2
+
             val initX =
                 Random.nextInt(
                     (lotteryPoolRect.left).toInt(),
                     (lotteryPoolRect.right - it.measuredWidth).toInt()
                 )
-            val initY =
+            val initY = if (bottom) {
+                lotteryPoolRect.bottom - it.measuredHeight
+            } else {
                 Random.nextInt(
                     (lotteryPoolRect.top).toInt(),
                     (lotteryPoolRect.bottom - it.measuredHeight).toInt()
                 )
+            }
+
+
 //            val left = initX - haftWidth
 //            val top = initY - haftHeight
             it.x = initX.toFloat()
@@ -119,23 +130,39 @@ class PrizePool:FrameLayout {
         }
     }
 
-    fun addChildViews(list: List<ViewGroup>) {
+    fun  resetPath(){
+        pathMeasureList.clear()
+        childViews.forEach {
+            val pathMeasure = initPath(it)
+            pathMeasureList.add(pathMeasure)
+        }
+    }
+
+    fun clearChildViews() {
+        childViews.clear()
+        removeAllViews()
+        requestLayout()
+    }
+
+    fun addChildViews(list: ArrayList<ViewGroup>) {
         childViews = list
         list.forEach {
             addView(it)
+        }
+        post {
+            initBallRandomPositon(true)
         }
         requestLayout()
     }
 
     fun setBallPosition(progress: Float) {
         childViews.forEachIndexed { index, viewGroup ->
-            val pathMeasure = pathMeasureList.get(index)
+            val pathMeasure = pathMeasureList[index]
             val pos = FloatArray(2)
             pathMeasure.getPosTan(pathMeasure.length * progress, pos, null)
             viewGroup.x = pos[0]
             viewGroup.y = pos[1]
         }
     }
-
 
 }

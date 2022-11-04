@@ -30,17 +30,17 @@
             android:layout_marginBottom="50dp"
             android:src="@mipmap/ic_launcher"
             android:tag="export"
-            android:visibility="gone"
+            android:visibility="visible"
             app:roundPercent="1"
             tools:visibility="visible" />
 
     </com.example.widget.widget.LotteryLayout>
 
     <Button
-        android:text="摇奖"
         android:id="@+id/btn_roll"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="摇奖"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

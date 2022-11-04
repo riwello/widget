@@ -28,17 +28,25 @@ class LotteryLayout : FrameLayout {
         defStyleAttr
     )
 
+    private var animatorEndCallBack: () -> Unit = {}
+    fun setAnimatorEndCallBack(animatorEndCallBack: () -> Unit) {
+        this.animatorEndCallBack = animatorEndCallBack
+    }
+
     override fun onFinishInflate() {
         super.onFinishInflate()
-        exportView = findViewWithTag("export")
         poolView = findViewWithTag("pool")
+        exportView = findViewWithTag("export")
+        exportView?.visibility = INVISIBLE
     }
 
     var animatorSet: AnimatorSet? = null
 
     @SuppressLint("ObjectAnimatorBinding")
     fun startRoll() {
+//        reset()
         animatorSet?.cancel()
+        //奖池动画
         val rollAnimation = ValueAnimator.ofFloat(0f, 1f).apply {
             addUpdateListener {
                 val progress = it.animatedValue as Float
@@ -46,9 +54,9 @@ class LotteryLayout : FrameLayout {
                 poolView?.setBallPosition(progress)
             }
             duration = 2000
-//            interpolator = LinearInterpolator()
+            interpolator = LinearInterpolator()
         }
-
+        //出奖口动画
         val exportItemSet = AnimatorSet().apply {
             play(ObjectAnimator.ofFloat(exportView, "alpha", 1f, 0.5f))
                 .with(ObjectAnimator.ofFloat(exportView, "scaleY", 0.8f, 1f))
@@ -56,26 +64,30 @@ class LotteryLayout : FrameLayout {
             addListener(onStart = {
                 exportView?.visibility = VISIBLE
             }, onEnd = {
-                exportView?.visibility = GONE
-
+                exportView?.visibility = INVISIBLE
+                //
             }, onCancel = {
-                exportView?.visibility = GONE
+                exportView?.visibility = INVISIBLE
             })
             duration = 500
         }
-
+        //动画合集
         animatorSet = AnimatorSet().apply {
-            play(rollAnimation).before(exportItemSet)/*.with(exportItemScaleX).with(exportItemScaleY)*/
+            play(rollAnimation).before(exportItemSet)
+            addListener(onEnd = {
+                animatorEndCallBack.invoke()
+                poolView?.resetPath()
+            })
         }
         animatorSet?.start()
     }
 
-    fun reset() {
+    private fun reset() {
         animatorSet?.cancel()
-        poolView?.initBallRandomPositon()
-        requestLayout()
+        poolView?.resetPath()
+        exportView?.visibility = GONE
+//        requestLayout()
     }
-
 
     companion object {
         const val DIRECTION_TOP = 1
@@ -83,5 +95,4 @@ class LotteryLayout : FrameLayout {
         const val DIRECTION_LEFT = 3
         const val DIRECTION_RIGHT = 4
     }
-
 }
