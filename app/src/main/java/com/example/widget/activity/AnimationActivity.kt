@@ -1,10 +1,10 @@
-package com.example.widget
+package com.example.widget.activity
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
+import com.example.widget.R
 import com.example.widget.databinding.ActivityAnimationBinding
 
 class AnimationActivity: AppCompatActivity() {

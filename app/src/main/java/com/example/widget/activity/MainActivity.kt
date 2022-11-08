@@ -1,4 +1,4 @@
-package com.example.widget
+package com.example.widget.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -7,6 +7,7 @@ import android.view.View
 import androidx.viewpager2.widget.ViewPager2
 import com.chad.library.adapter.base.BaseQuickAdapter
 import com.chad.library.adapter.base.viewholder.BaseViewHolder
+import com.example.widget.R
 import com.example.widget.entiy.AddressEntity
 import com.example.widget.utils.StreamUtil
 import com.example.widget.widget.OvalArcLevelView
@@ -35,7 +36,8 @@ class MainActivity : AppCompatActivity() {
         ovalArcLevelView.bindViewPager(viewPager2)
 
         viewPager2.setCurrentItem(2)
-
+        val ret = LongRange(0L,0L).contains(System.currentTimeMillis())
+        Log.e(TAG," intime $ret")
 
     }
 
